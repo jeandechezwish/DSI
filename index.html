@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Terminal DSI - Chiffrement</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #eee;
+      font-family: Consolas, monospace;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #00bfff;
+      margin-bottom: 10px;
+    }
+    textarea, input {
+      background-color: #222;
+      color: #eee;
+      border: 1px solid #00bfff;
+      padding: 10px;
+      width: 80%;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      resize: vertical;
+    }
+    textarea {
+      height: 100px;
+      margin-bottom: 10px;
+    }
+    input[type="password"] {
+      width: 50%;
+    }
+    button {
+      background-color: #008cff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px;
+    }
+    #result {
+      color: #00ff88;
+      margin-top: 15px;
+      white-space: pre-wrap;
+      background-color: #222;
+      padding: 10px;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+      border: 1px solid #00bfff;
+    }
+    small {
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛡️ TERMINAL DSI - MESSAGES CODÉS 🛡️</h1>
+
+  <p>Entrez votre message :</p>
+  <textarea id="message" placeholder="Tape ton message ici..."></textarea>
+
+  <p>Clé secrète :</p>
+  <input type="password" id="key" placeholder="Utilisez la clé reçue par le QG">
+
+  <div>
+    <button onclick="encrypt()">🔒 Chiffrer</button>
+    <button onclick="decrypt()">🔓 Déchiffrer</button>
+    <button onclick="copyResult()">📋 Copier</button>
+  </div>
+
+  <div id="result">Résultat affiché ici...</div>
+
+  <small>Terminal sécurisé — Accès restreint</small>
+
+  <script>
+    function generateTable(key) {
+      const chars = [];
+      for (let i = 32; i < 127; i++) chars.push(String.fromCharCode(i));
+
+      // Shuffle with seeded RNG
+      let seed = 0;
+      for (let i = 0; i < key.length; i++) seed += key.charCodeAt(i) * (i + 1);
+      let shuffled = chars.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = (seed + i * 53) % (i + 1);
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      const map = {};
+      const reverse = {};
+      chars.forEach((c, i) => {
+        map[c] = shuffled[i];
+        reverse[shuffled[i]] = c;
+      });
+      return { map, reverse };
+    }
+
+    function encrypt() {
+      const msg = document.getElementById("message").value;
+      const key = document.getElementById("key").value;
+      if (!msg || !key || key === "Utilisez la clé reçue par le QG") {
+        document.getElementById("result").innerText = "[Erreur] Message ou clé manquant.";
+        return;
+      }
+      const { map } = generateTable(key);
+      let output = "";
+      for (let char of msg) {
+        output += map[char] || char;
+      }
+      document.getElementById("result").innerText = output;
+    }
+
+    function decrypt() {
+      const msg = document.getElementById("message").value;
+      const key = document.getElementById("key").value;
+      if (!msg || !key || key === "Utilisez la clé reçue par le QG") {
+        document.getElementById("result").innerText = "[Erreur] Message ou clé manquant.";
+        return;
+      }
+      const { reverse } = generateTable(key);
+      let output = "";
+      for (let char of msg) {
+        output += reverse[char] || char;
+      }
+      document.getElementById("result").innerText = output;
+    }
+
+    function copyResult() {
+      const res = document.getElementById("result").innerText;
+      navigator.clipboard.writeText(res).then(() => {
+        alert("Résultat copié !");
+      });
+    }
+  </script>
+
+</body>
+</html>
