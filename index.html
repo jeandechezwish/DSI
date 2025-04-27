@@ -78,65 +78,79 @@
   <small>Terminal sécurisé — Accès restreint</small>
 
   <script>
-    function generateTable(key) {
-      const chars = [];
-      for (let i = 32; i < 127; i++) chars.push(String.fromCharCode(i));
+  function generateTable(key) {
+    const chars = [];
+    for (let i = 32; i < 127; i++) chars.push(String.fromCharCode(i));
 
-      // Shuffle with seeded RNG
-      let seed = 0;
-      for (let i = 0; i < key.length; i++) seed += key.charCodeAt(i) * (i + 1);
-      let shuffled = chars.slice();
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = (seed + i * 53) % (i + 1);
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      const map = {};
-      const reverse = {};
-      chars.forEach((c, i) => {
-        map[c] = shuffled[i];
-        reverse[shuffled[i]] = c;
-      });
-      return { map, reverse };
+    // Shuffle with seeded RNG
+    let seed = 0;
+    for (let i = 0; i < key.length; i++) seed += key.charCodeAt(i) * (i + 1);
+    let shuffled = chars.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = (seed + i * 53) % (i + 1);
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    function encrypt() {
-      const msg = document.getElementById("message").value;
-      const key = document.getElementById("key").value;
-      if (!msg || !key || key === "Utilisez la clé reçue par le QG") {
-        document.getElementById("result").innerText = "[Erreur] Message ou clé manquant.";
-        return;
-      }
-      const { map } = generateTable(key);
-      let output = "";
-      for (let char of msg) {
-        output += map[char] || char;
-      }
-      document.getElementById("result").innerText = output;
-    }
+    const map = {};
+    const reverse = {};
+    chars.forEach((c, i) => {
+      map[c] = shuffled[i];
+      reverse[shuffled[i]] = c;
+    });
+    return { map, reverse };
+  }
 
-    function decrypt() {
-      const msg = document.getElementById("message").value;
-      const key = document.getElementById("key").value;
-      if (!msg || !key || key === "Utilisez la clé reçue par le QG") {
-        document.getElementById("result").innerText = "[Erreur] Message ou clé manquant.";
-        return;
-      }
-      const { reverse } = generateTable(key);
-      let output = "";
-      for (let char of msg) {
-        output += reverse[char] || char;
-      }
-      document.getElementById("result").innerText = output;
-    }
+  function validateKey(key) {
+    // Exemple de validation, tu peux ajuster cela selon la logique de la clé attendue
+    const expectedKey = "cléSecretDSI";  // Remplace par la clé correcte attendue
+    return key === expectedKey;
+  }
 
-    function copyResult() {
-      const res = document.getElementById("result").innerText;
-      navigator.clipboard.writeText(res).then(() => {
-        alert("Résultat copié !");
-      });
+  function encrypt() {
+    const msg = document.getElementById("message").value;
+    const key = document.getElementById("key").value;
+    if (!msg || !key || key === "Utilisez la clé reçue par le QG") {
+      document.getElementById("result").innerText = "[Erreur] Message ou clé manquant.";
+      return;
     }
-  </script>
+    if (!validateKey(key)) {
+      document.getElementById("result").innerText = "[Erreur] Clé incorrecte.";
+      return;
+    }
+    const { map } = generateTable(key);
+    let output = "";
+    for (let char of msg) {
+      output += map[char] || char;
+    }
+    document.getElementById("result").innerText = output;
+  }
 
+  function decrypt() {
+    const msg = document.getElementById("message").value;
+    const key = document.getElementById("key").value;
+    if (!msg || !key || key === "Utilisez la clé reçue par le QG") {
+      document.getElementById("result").innerText = "[Erreur] Message ou clé manquant.";
+      return;
+    }
+    if (!validateKey(key)) {
+      document.getElementById("result").innerText = "[Erreur] Clé incorrecte.";
+      return;
+    }
+    const { reverse } = generateTable(key);
+    let output = "";
+    for (let char of msg) {
+      output += reverse[char] || char;
+    }
+    document.getElementById("result").innerText = output;
+  }
+
+  function copyResult() {
+    const res = document.getElementById("result").innerText;
+    navigator.clipboard.writeText(res).then(() => {
+      alert("Résultat copié !");
+    });
+  }
+</script>
+  
 </body>
 </html>
